@@ -1,14 +1,12 @@
-# Use an official OpenJDK runtime as a parent image
+# First stage: Build the JAR file
+FROM eclipse-temurin:17-jdk-alpine as build
+WORKDIR /workspace
+COPY . .
+RUN ./gradlew bootJar
+
+# Second stage: Run the application
 FROM eclipse-temurin:17-jdk-alpine
-
-# Set the working directory inside the container
 WORKDIR /app
-
-# Copy the JAR file into the container
-COPY build/libs/map-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose the port (optional, as Render doesn't rely on this for detection)
+COPY --from=build /workspace/build/libs/map-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-
-# Run the JAR file, dynamically binding the PORT environment variable
 ENTRYPOINT ["sh", "-c", "java -jar app.jar --server.port=${PORT:-8080}"]
